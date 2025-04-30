@@ -188,6 +188,43 @@ app.post('/api/posts', authenticateToken, async (req, res) => {
   }
 });
 
+// Add this route to backend-code.js, right after the post creation route
+
+// Delete post (admin only)
+app.delete('/api/posts/:postId', authenticateToken, async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const userId = req.user.id;
+    
+    // Check if user is admin
+    const admin = await isAdmin(userId);
+    if (!admin) {
+      return res.status(403).json({ error: 'Only admins can delete posts' });
+    }
+    
+    // First delete all comments associated with the post
+    await pool.query(
+      'DELETE FROM comments WHERE post_id = $1',
+      [postId]
+    );
+    
+    // Then delete the post
+    const result = await pool.query(
+      'DELETE FROM posts WHERE id = $1 RETURNING *',
+      [postId]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+    
+    res.json({ message: 'Post deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting post:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Get post comments
 app.get('/api/posts/:postId/comments', authenticateToken, async (req, res) => {
   try {

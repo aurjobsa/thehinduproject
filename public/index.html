@@ -189,12 +189,31 @@
             </div>
           </form>
         </div>
+        <div class="admin-section">
+          <h3>Manage Existing Posts</h3>
+          <div class="admin-posts" id="admin-posts">
+            <div class="loading">Loading posts...</div>
+          </div>
+        </div>
       </section>
     </main>
+    <!-- Add this new section to index.html, right before the closing </main> tag -->
+
+<!-- Single Post Page -->
+<section class="page" id="single-post-page" style="display: none;">
+  <div class="post-navigation">
+    <button id="back-to-posts" class="btn-back"><i class="fas fa-arrow-left"></i> Back to Posts</button>
+  </div>
+  <div class="single-post-container" id="single-post-container">
+    <!-- Single post content will be loaded here dynamically -->
+    <div class="loading">Loading post...</div>
+  </div>
+</section>
     
     <!-- Notification Area -->
     <div class="notification" id="notification"></div>
   </div>
+
   
   <script src="javascript-code.js"></script>
 </body>

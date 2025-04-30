@@ -1,5 +1,5 @@
 // Global variables
-const API_URL = 'https://thehinduproject.onrender.com/api'; // Change this to your actual API URL
+const API_URL = 'http://localhost:3000/api'; // Change this to your actual API URL
 let currentUser = null;
 let isAdmin = false;
 
@@ -138,6 +138,18 @@ function navigateTo(pageId) {
     case 'profile':
       loadProfile();
       break;
+      // Add loadAdminPosts to the navigateTo function where it loads admin panel
+// Add this case to the switch statement in navigateTo function:
+    case 'admin':
+     if (isAdmin) {
+     loadAdminPosts();
+  }
+     break;
+  // Update navigateTo function to handle the single post page
+// Add this case to the switch statement in the navigateTo function
+     case 'single-post':
+  // Nothing special needed, just show the page
+     break;
   }
 }
 
@@ -155,16 +167,18 @@ async function loadPosts() {
       const postEl = document.createElement('div');
       postEl.className = 'post-card';
       
-      let postHtml = `
-        <div class="post-header">
+      // Update this part in the loadPosts function
+      let postHtml =`
+      <div class="post-header">
           <h3 class="post-title">${post.title}</h3>
           <div class="post-meta">
             <span class="post-author">By ${post.username}</span>
             <span class="post-date">${new Date(post.created_at).toLocaleDateString()}</span>
+            ${isAdmin ? `<button class="delete-post-btn" data-post-id="${post.id}"><i class="fas fa-trash"></i></button>` : ''}
           </div>
         </div>
         <div class="post-content">
-      `;
+      `;;
       
       if (post.image_url) {
         postHtml += `<img src="${post.image_url}" alt="${post.title}" class="post-image">`;
@@ -215,6 +229,221 @@ async function loadPosts() {
   }
 }
 
+
+
+
+
+
+// Add these functions to javascript-code.js
+
+// Global variable to store posts data
+let postsData = [];
+
+// Modified loadPosts function to make posts clickable
+async function loadPosts() {
+  const postsContainer = document.getElementById('posts-container');
+  postsContainer.innerHTML = '<div class="loading">Loading posts...</div>';
+  
+  const posts = await apiRequest('/posts');
+  
+  if (posts && posts.length > 0) {
+    // Store posts data for later use
+    postsData = posts;
+    
+    postsContainer.innerHTML = '';
+    
+    posts.forEach(post => {
+      const postEl = document.createElement('div');
+      postEl.className = 'post-card';
+      postEl.setAttribute('data-post-id', post.id);
+      
+      // Create a preview of the content (first 200 chars)
+      const contentPreview = post.content.length > 200 
+        ? post.content.substring(0, 200) + '...' 
+        : post.content;
+      
+      let postHtml = `
+        <div class="post-header">
+          <h3 class="post-title">${post.title}</h3>
+          <div class="post-meta">
+            <span class="post-author">By ${post.username}</span>
+            <span class="post-date">${new Date(post.created_at).toLocaleDateString()}</span>
+            ${isAdmin ? `<button class="delete-post-btn" data-post-id="${post.id}"><i class="fas fa-trash"></i></button>` : ''}
+          </div>
+        </div>
+        <div class="post-content">
+      `;
+      
+      if (post.image_url) {
+        postHtml += `<img src="${post.image_url}" alt="${post.title}" class="post-image">`;
+      }
+      
+      postHtml += `
+          <div class="post-text">${contentPreview}</div>
+          <button class="read-more-btn">Read More</button>
+        </div>
+      `;
+      
+      postEl.innerHTML = postHtml;
+      postsContainer.appendChild(postEl);
+      
+      // Add event listener for post click
+      postEl.addEventListener('click', function(e) {
+        // Don't navigate if clicking on delete button
+        if (e.target.closest('.delete-post-btn')) {
+          return;
+        }
+        
+        const postId = this.getAttribute('data-post-id');
+        openSinglePost(postId);
+      });
+      
+      // Add event listener for delete button if admin
+      if (isAdmin) {
+        const deleteBtn = postEl.querySelector('.delete-post-btn');
+        if (deleteBtn) {
+          deleteBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const postId = this.getAttribute('data-post-id');
+            deletePost(postId);
+          });
+        }
+      }
+    });
+  } else {
+    postsContainer.innerHTML = '<div class="no-posts">No posts yet.</div>';
+  }
+}
+
+// Function to open a single post
+function openSinglePost(postId) {
+  // Find the post in stored data
+  const post = postsData.find(p => p.id === parseInt(postId));
+  
+  if (!post) {
+    showNotification('Post not found', 'error');
+    return;
+  }
+  
+  const singlePostContainer = document.getElementById('single-post-container');
+  
+  // Format the content with proper paragraphs
+  const formattedContent = formatPostContent(post.content);
+  
+  let postHtml = `
+    <div class="single-post">
+      <div class="post-header">
+        <h2 class="post-title">${post.title}</h2>
+        <div class="post-meta">
+          <span class="post-author">By ${post.username}</span>
+          <span class="post-date">${new Date(post.created_at).toLocaleDateString()}</span>
+          ${isAdmin ? `<button class="delete-post-btn" data-post-id="${post.id}"><i class="fas fa-trash"></i></button>` : ''}
+        </div>
+      </div>
+      <div class="post-content">
+  `;
+  
+  if (post.image_url) {
+    postHtml += `<img src="${post.image_url}" alt="${post.title}" class="post-image post-image-large">`;
+  }
+  
+  postHtml += `
+        <div class="post-text">${formattedContent}</div>
+      </div>
+      <div class="post-footer">
+        <div class="comment-section">
+          <h4>Comments</h4>
+          <div class="post-comments" id="comments-${post.id}">
+            <div class="loading">Loading comments...</div>
+          </div>
+          ${currentUser ? `
+            <form class="comment-form" data-post-id="${post.id}">
+              <textarea placeholder="Add a comment..." required></textarea>
+              <button type="submit"><i class="fas fa-paper-plane"></i></button>
+            </form>
+          ` : `
+            <div class="chat-login-prompt">
+              <p>Please <a href="#" data-page="login">login</a> to comment</p>
+            </div>
+          `}
+        </div>
+      </div>
+    </div>
+  `;
+  
+  singlePostContainer.innerHTML = postHtml;
+  
+  // Add event listener for delete button if admin
+  if (isAdmin) {
+    const deleteBtn = singlePostContainer.querySelector('.delete-post-btn');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const postId = this.getAttribute('data-post-id');
+        deletePost(postId);
+        navigateTo('home'); // Go back to home after deleting
+      });
+    }
+  }
+  
+  // Add event listener for comment form
+  if (currentUser) {
+    const commentForm = singlePostContainer.querySelector('.comment-form');
+    commentForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const postId = this.getAttribute('data-post-id');
+      const content = this.querySelector('textarea').value;
+      addComment(postId, content, this);
+    });
+  }
+  
+  // Load comments for this post
+  loadComments(post.id);
+  
+  // Navigate to the single post page
+  navigateTo('single-post');
+}
+
+// Function to format post content with proper paragraphs and sanitize HTML
+function formatPostContent(content) {
+  // First, ensure content is a string
+  if (typeof content !== 'string') {
+    return '';
+  }
+  
+  // Sanitize HTML (basic implementation - for production use a proper sanitizer library)
+  let sanitized = content
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  
+  // Convert line breaks to paragraphs
+  let formatted = sanitized
+    .split('\n\n')
+    .filter(para => para.trim() !== '')
+    .map(para => `<p>${para.trim()}</p>`)
+    .join('');
+  
+  // Handle single line breaks within paragraphs
+  formatted = formatted.replace(/\n/g, '<br>');
+  
+  return formatted;
+}
+
+// Add event listener for the back button
+document.addEventListener('DOMContentLoaded', () => {
+  // ...existing code...
+  
+  // Back button on single post page
+  const backButton = document.getElementById('back-to-posts');
+  if (backButton) {
+    backButton.addEventListener('click', () => {
+      navigateTo('home');
+    });
+  }
+});
+
+
 // Load comments for a post
 async function loadComments(postId) {
   const commentsContainer = document.getElementById(`comments-${postId}`);
@@ -253,6 +482,21 @@ async function addComment(postId, content, form) {
     loadComments(postId);
     
     showNotification('Comment added successfully');
+  }
+}
+
+// Delete a post (admin only)
+async function deletePost(postId) {
+  if (!confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
+    return;
+  }
+  
+  const result = await apiRequest(`/posts/${postId}`, 'DELETE');
+  
+  if (result) {
+    // Reload posts
+    loadPosts();
+    showNotification('Post deleted successfully');
   }
 }
 
@@ -556,6 +800,19 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  // Add event listener for delete button if admin
+if (isAdmin) {
+  const deleteBtn = postEl.querySelector('.delete-post-btn');
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const postId = this.getAttribute('data-post-id');
+      deletePost(postId);
+    });
+  }
+}
   
   // Create event form (admin only)
   const createEventForm = document.getElementById('create-event-form');
@@ -588,6 +845,64 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+
+
+
+
+// Also, add a button to the admin panel to see all posts and delete them
+// Add this to the admin-page section in the HTML file
+
+// Add this to the admin panel in HTML:
+/*
+<div class="admin-section">
+  <h3>Manage Posts</h3>
+  <div class="admin-posts" id="admin-posts">
+    <div class="loading">Loading posts...</div>
+  </div>
+</div>
+*/
+
+// Add this function to load posts in admin panel
+function loadAdminPosts() {
+  if (!isAdmin) return;
+  
+  const adminPostsContainer = document.getElementById('admin-posts');
+  if (!adminPostsContainer) return;
+  
+  adminPostsContainer.innerHTML = '<div class="loading">Loading posts...</div>';
+  
+  apiRequest('/posts').then(posts => {
+    if (posts && posts.length > 0) {
+      adminPostsContainer.innerHTML = '<ul class="admin-posts-list"></ul>';
+      const postsList = adminPostsContainer.querySelector('.admin-posts-list');
+      
+      posts.forEach(post => {
+        const listItem = document.createElement('li');
+        listItem.className = 'admin-post-item';
+        listItem.innerHTML = `
+          <div class="admin-post-info">
+            <span class="admin-post-title">${post.title}</span>
+            <span class="admin-post-date">${new Date(post.created_at).toLocaleDateString()}</span>
+          </div>
+          <div class="admin-post-actions">
+            <button class="delete-post-btn" data-post-id="${post.id}"><i class="fas fa-trash"></i> Delete</button>
+          </div>
+        `;
+        postsList.appendChild(listItem);
+        
+        // Add event listener for delete button
+        const deleteBtn = listItem.querySelector('.delete-post-btn');
+        deleteBtn.addEventListener('click', function() {
+          const postId = this.getAttribute('data-post-id');
+          deletePost(postId);
+        });
+      });
+    } else {
+      adminPostsContainer.innerHTML = '<div class="no-posts">No posts yet.</div>';
+    }
+  });
+}
 
 // Initialize app
 function initApp() {
