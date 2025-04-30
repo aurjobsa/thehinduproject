@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hindu Community Platform</title>
+  <link rel="stylesheet" href="css-styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Navigation -->
+    <nav class="navbar">
+      <div class="navbar-brand">
+        <img src="logo.png" alt="Hindu Community" class="logo" id="logo">
+        <h1>Hindu Community</h1>
+      </div>
+      <div class="navbar-menu">
+        <button id="menu-toggle"><i class="fas fa-bars"></i></button>
+      </div>
+    </nav>
+    
+    <!-- Sidebar Navigation -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <button id="sidebar-close"><i class="fas fa-times"></i></button>
+      </div>
+      <ul class="sidebar-menu">
+        <li><a href="#" data-page="home" class="active"><i class="fas fa-home"></i> Home</a></li>
+        <li><a href="#" data-page="events"><i class="fas fa-calendar-alt"></i> Events</a></li>
+        <li><a href="#" data-page="chat"><i class="fas fa-comments"></i> Community Chat</a></li>
+        <li class="auth-only" id="profile-link"><a href="#" data-page="profile"><i class="fas fa-user"></i> My Profile</a></li>
+        <li class="admin-only"><a href="#" data-page="admin"><i class="fas fa-shield-alt"></i> Admin Panel</a></li>
+        <li class="no-auth-only"><a href="#" data-page="login"><i class="fas fa-sign-in-alt"></i> Login</a></li>
+        <li class="no-auth-only"><a href="#" data-page="register"><i class="fas fa-user-plus"></i> Register</a></li>
+        <li class="auth-only"><a href="#" id="logout-button"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+      </ul>
+    </div>
+    
+    <!-- Main Content Area -->
+    <main class="content" id="content">
+      <!-- Home Page (Posts Feed) -->
+      <section class="page" id="home-page">
+        <h2>Community Updates</h2>
+        <div class="posts-container" id="posts-container">
+          <!-- Posts will be loaded here dynamically -->
+          <div class="loading">Loading posts...</div>
+        </div>
+      </section>
+      
+      <!-- Events Page -->
+      <section class="page" id="events-page" style="display: none;">
+        <h2>Upcoming Events</h2>
+        <div class="events-container" id="events-container">
+          <!-- Events will be loaded here dynamically -->
+          <div class="loading">Loading events...</div>
+        </div>
+      </section>
+      
+      <!-- Chat Page -->
+      <section class="page" id="chat-page" style="display: none;">
+        <h2>Community Chat</h2>
+        <div class="chat-container">
+          <div class="chat-messages" id="chat-messages">
+            <!-- Messages will be loaded here dynamically -->
+          </div>
+          <div class="chat-input auth-only">
+            <textarea id="chat-message" placeholder="Type a message..."></textarea>
+            <button id="send-message"><i class="fas fa-paper-plane"></i></button>
+          </div>
+          <div class="chat-login-prompt no-auth-only">
+            <p>Please <a href="#" data-page="login">login</a> to participate in the chat.</p>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Login Page -->
+      <section class="page" id="login-page" style="display: none;">
+        <h2>Login</h2>
+        <form id="login-form" class="auth-form">
+          <div class="form-group">
+            <label for="login-email">Email</label>
+            <input type="email" id="login-email" required>
+          </div>
+          <div class="form-group">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" required>
+          </div>
+          <div class="form-actions">
+            <button type="submit">Login</button>
+          </div>
+          <p>Don't have an account? <a href="#" data-page="register">Register</a></p>
+        </form>
+      </section>
+      
+      <!-- Register Page -->
+      <section class="page" id="register-page" style="display: none;">
+        <h2>Register</h2>
+        <form id="register-form" class="auth-form">
+          <div class="form-group">
+            <label for="register-username">Username</label>
+            <input type="text" id="register-username" required>
+          </div>
+          <div class="form-group">
+            <label for="register-email">Email</label>
+            <input type="email" id="register-email" required>
+          </div>
+          <div class="form-group">
+            <label for="register-password">Password</label>
+            <input type="password" id="register-password" required>
+          </div>
+          <div class="form-group">
+            <label for="register-fullname">Full Name</label>
+            <input type="text" id="register-fullname" required>
+          </div>
+          <div class="form-group">
+            <label for="register-location">Location</label>
+            <input type="text" id="register-location">
+          </div>
+          <div class="form-group">
+            <label for="register-phone">Phone</label>
+            <input type="tel" id="register-phone">
+          </div>
+          <div class="form-group">
+            <label for="register-skills">Skills (How can you help others?)</label>
+            <textarea id="register-skills"></textarea>
+          </div>
+          <div class="form-actions">
+            <button type="submit">Register</button>
+          </div>
+          <p>Already have an account? <a href="#" data-page="login">Login</a></p>
+        </form>
+      </section>
+      
+      <!-- Profile Page -->
+      <section class="page" id="profile-page" style="display: none;">
+        <h2>My Profile</h2>
+        <div class="profile-info" id="profile-info">
+          <!-- Profile information will be loaded here -->
+        </div>
+      </section>
+      
+      <!-- Admin Panel Page -->
+      <section class="page" id="admin-page" style="display: none;">
+        <h2>Admin Panel</h2>
+        
+        <div class="admin-section">
+          <h3>Create New Post</h3>
+          <form id="create-post-form">
+            <div class="form-group">
+              <label for="post-title">Title</label>
+              <input type="text" id="post-title" required>
+            </div>
+            <div class="form-group">
+              <label for="post-content">Content</label>
+              <textarea id="post-content" required></textarea>
+            </div>
+            <div class="form-group">
+              <label for="post-image">Image URL (Optional)</label>
+              <input type="url" id="post-image">
+            </div>
+            <div class="form-actions">
+              <button type="submit">Create Post</button>
+            </div>
+          </form>
+        </div>
+        
+        <div class="admin-section">
+          <h3>Create New Event</h3>
+          <form id="create-event-form">
+            <div class="form-group">
+              <label for="event-title">Title</label>
+              <input type="text" id="event-title" required>
+            </div>
+            <div class="form-group">
+              <label for="event-description">Description</label>
+              <textarea id="event-description" required></textarea>
+            </div>
+            <div class="form-group">
+              <label for="event-location">Location</label>
+              <input type="text" id="event-location" required>
+            </div>
+            <div class="form-group">
+              <label for="event-date">Date and Time</label>
+              <input type="datetime-local" id="event-date" required>
+            </div>
+            <div class="form-actions">
+              <button type="submit">Create Event</button>
+            </div>
+          </form>
+        </div>
+      </section>
+    </main>
+    
+    <!-- Notification Area -->
+    <div class="notification" id="notification"></div>
+  </div>
+  
+  <script src="javascript-code.js"></script>
+</body>
+</html>
