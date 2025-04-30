@@ -1,5 +1,5 @@
 // Global variables
-const API_URL = 'http://localhost:3000/api'; // Change this to your actual API URL
+const API_URL = 'https://thehinduproject.onrender.com/api'; // Change this to your actual API URL
 let currentUser = null;
 let isAdmin = false;
 
